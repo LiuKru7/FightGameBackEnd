@@ -18,7 +18,24 @@ const playerSchema = new Schema({
         type: Number,
         required:true,
         default: 200
-    }
+    },
+    weapon: {
+        type:[],
+        required:false,
+    },
+    armour: {
+        type:[],
+        required:false,
+    },
+    potion: {
+        type:[],
+        required:false,
+    },
+    items: {
+        type: [],
+        required:false
+    },
+
 })
 
 const Player = mongoose.model("FightGamePlayers", playerSchema);

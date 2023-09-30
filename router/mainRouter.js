@@ -3,12 +3,25 @@ const router = express.Router()
 
 const {
     avatars,
-    register, login
+    register,
+    login,
+    gameInfoLoad,
+    generateGame,
+    takeItems, updateItems, updateFightItem, autoLogin,  removeItem,
+
 } = require("../controller/mainController")
+
+const validators = require ('../middleware/validation')
 
 router.post ("/register", register)
 router.get("/avatars", avatars)
 router.post("/login", login)
-
+router.get("/gameInfoLoad", gameInfoLoad)
+router.get ("/generateGame",validators.authorization, generateGame)
+router.get ("/takeItems/:id",validators.authorization, takeItems)
+router.get ("/updateItems", validators.authorization, updateItems)
+router.post ("/updateFightItem",validators.authorization, updateFightItem)
+router.post ("/autoLogin",validators.authorization, autoLogin)
+router.post ("/removeItem", validators.authorization, removeItem)
 
 module.exports=router

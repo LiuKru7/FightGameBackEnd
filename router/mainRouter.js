@@ -7,7 +7,7 @@ const {
     login,
     gameInfoLoad,
     generateGame,
-    takeItems, updateItems, updateFightItem, autoLogin,  removeItem,
+    takeItems, updateItems, updateFightItem, autoLogin,  removeItem, winGame
 
 } = require("../controller/mainController")
 
@@ -23,5 +23,6 @@ router.get ("/updateItems", validators.authorization, updateItems)
 router.post ("/updateFightItem",validators.authorization, updateFightItem)
 router.post ("/autoLogin",validators.authorization, autoLogin)
 router.post ("/removeItem", validators.authorization, removeItem)
+router.post ("/winGame", validators.authorization, winGame)
 
 module.exports=router

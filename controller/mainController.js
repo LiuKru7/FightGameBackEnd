@@ -58,7 +58,6 @@ let lastGenerate = ""
 module.exports = {
     avatars: async (req,res) => {
         res.send ({error: false, data: avatarsUrl, message:"work"})
-
     },
     register: async (req, res) => {
         const info = req.body;
@@ -70,7 +69,33 @@ module.exports = {
         const player = new playerDb({
             username: info.username,
             password: info.password,
-            avatar: avatarsUrl[info.avatar].url
+            avatar: avatarsUrl[info.avatar].url,
+            weapon: [{
+                name:"weapon",
+                color:"white",
+                weaponUrl: "https://cdn-icons-png.flaticon.com/512/2491/2491229.png",
+                weaponPower: 1,
+                weaponLevel:1,
+                gold: 1,
+                doubleChance: 0,
+                blockChance: 0,
+                stealChance: 0,
+            }],
+            armour: [{
+                name:"armour",
+                armourDefence: 0,
+                armourLevel: 1,
+                armourUrl: "https://cdn-icons-png.flaticon.com/512/391/391076.png",
+                weaponPower: 1,
+                doubleChance: 0,
+                blockChance: 0,
+                stealChance: 0,
+            }],
+            potion: [{
+                name: "potion",
+                potion:1,
+                potionUrl:"https://cdn-icons-png.flaticon.com/512/1391/1391333.png"
+            }]
         });
         const hash = await bCrypt.hash(player.password, 10);
         player.password = hash;
@@ -103,33 +128,49 @@ module.exports = {
         res.send({error:false, data: [], message: ""})
     },
     generateGame:async (req,res) => {
+
+        const single = await playerDb.findOne({ _id: req.user._id }, { password: 0 });
+        if(single.money<50) return res.send({error:true, data: [], message:"enough money"})
+        single.money -= 50
+
+        const userNew = await playerDb.findOneAndUpdate(
+            { _id: req.user._id },
+            {
+                $set: {
+                    money: single.money
+                }
+            },
+            { new: true, projection: { password: 0 } }
+        );
+
+
         const weapons = [
-            "https://cdn3.iconfinder.com/data/icons/fantasy-and-role-play-game-adventure-quest/512/Sword-512.png",
-            "https://cdn3.iconfinder.com/data/icons/minecraft-icons/512/Gold_Sword.png",
-            "https://cdn3.iconfinder.com/data/icons/minecraft-icons/512/Diamond_Sword.png",
-            "https://cdn3.iconfinder.com/data/icons/minecraft-icons/512/Iron_Sword.png",
-            "https://cdn3.iconfinder.com/data/icons/minecraft-icons/512/Gold_Axe.png",
-            "https://cdn3.iconfinder.com/data/icons/minecraft-icons/512/Gold_Pickaxe.png",
-            "https://cdn4.iconfinder.com/data/icons/origami-25/64/Sword_origami_paper_craft_creative-512.png",
-            "https://cdn2.iconfinder.com/data/icons/flat-icons-19/512/Hunting_bow.png",
-            "https://cdn4.iconfinder.com/data/icons/breakfast-14/48/fork-512.png",
-            "https://cdn4.iconfinder.com/data/icons/breakfast-14/48/knife-512.png",
-            "https://cdn1.iconfinder.com/data/icons/ninja-things-1/770/kunai-simple-512.png",
-            "https://static.vecteezy.com/system/resources/previews/019/040/578/original/an-8-bit-retro-styled-pixel-art-illustration-of-a-wooden-sword-free-png.png",
+            "https://cdn-icons-png.flaticon.com/512/771/771255.png",
+            "https://cdn-icons-png.flaticon.com/256/771/771204.png",
+            "https://cdn-icons-png.flaticon.com/512/297/297837.png",
+            "https://cdn-icons-png.flaticon.com/512/5880/5880401.png",
+            "https://cdn-icons-png.flaticon.com/512/123/123680.png",
+            "https://cdn-icons-png.flaticon.com/512/1373/1373350.png",
+            "https://cdn-icons-png.flaticon.com/512/1881/1881456.png",
+            "https://cdn-icons-png.flaticon.com/512/827/827295.png",
+            "https://cdn-icons-png.flaticon.com/512/1106/1106231.png",
+            "https://cdn-icons-png.flaticon.com/512/2614/2614166.png",
+            "https://cdn-icons-png.flaticon.com/512/2858/2858938.png",
+            "https://cdn-icons-png.flaticon.com/512/6102/6102761.png",
         ]
         const armours = [
             "https://cdn1.iconfinder.com/data/icons/video-game-elements-4/32/Armor-512.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
-            "https://www.pngmart.com/files/22/Armour-PNG-Pic.png",
-            "https://www.pngmart.com/files/22/Armour-PNG-Transparent.png",
-            "https://www.seekpng.com/png/detail/329-3292711_chest-armor-body-armor.png",
-            "https://www.seekpng.com/png/detail/329-3292711_chest-armor-body-armor.png",
-            "https://www.seekpng.com/png/detail/329-3292711_chest-armor-body-armor.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
-            "https://art.pixilart.com/thumb/6e9293f0bc40448.png",
+            "https://cdn-icons-png.flaticon.com/512/6169/6169387.png",
+            "https://cdn-icons-png.flaticon.com/512/683/683550.png",
+            "https://cdn-icons-png.flaticon.com/512/1907/1907813.png",
+            "https://cdn-icons-png.flaticon.com/512/4243/4243175.png",
+            "https://cdn-icons-png.flaticon.com/512/1907/1907813.png",
+            "https://cdn3.iconfinder.com/data/icons/medieval-2d-rpg-game-items-weapons-armour-helmets-/26/GAME-SVG_--19-512.png",
+            "https://cdn-icons-png.flaticon.com/512/6981/6981295.png",
+            "https://cdn-icons-png.flaticon.com/512/1455/1455020.png",
+            "https://cdn-icons-png.flaticon.com/512/9480/9480468.png",
+            "https://cdn-icons-png.flaticon.com/512/6169/6169914.png",
+            "https://cdn3.iconfinder.com/data/icons/medieval-2d-rpg-game-items-weapons-armour-helmets-/26/GAME-SVG_--18-512.png",
         ]
         const effectSlots = [
             { slotName: 'criticalChance',
@@ -199,8 +240,6 @@ module.exports = {
 
 
         if (weaponEffectSlots) {
-
-
             if (weaponEffectSlots=== 1) {
                 let randomSlot = Math.floor(Math.random()*3)
                 weaponsSlots.push(randomSlot)
@@ -256,9 +295,6 @@ module.exports = {
             if (armourEffectSlots===3) {
                 armourSlots = [1,2,3]
             }}
-
-
-
         for (let i = 0; i < weaponsSlots.length ; i++) {
             if (weaponsSlots[i]===1) {
                 let random = Math.floor(Math.random()*50)+1
@@ -392,15 +428,12 @@ module.exports = {
             armour: ""
         }
 
-        if (weaponLevel===1) color.weapon="yellow"
-        if (weaponLevel===2) color.weapon="blue"
-        if (weaponLevel===3) color.weapon="red"
-        if (armourLevel===1) color.armour="yellow"
-        if (armourLevel===2) color.armour="blue"
-        if (armourLevel===3) color.armour="red"
-
-
-
+        if (weaponLevel===1) color.weapon="#fdfdbc"
+        if (weaponLevel===2) color.weapon="#7a88a8"
+        if (weaponLevel===3) color.weapon="#f88c8c"
+        if (armourLevel===1) color.armour="#fdfdbc"
+        if (armourLevel===2) color.armour="#7a88a8"
+        if (armourLevel===3) color.armour="#f88c8c"
 
         items = {
             weapon: {
@@ -410,9 +443,6 @@ module.exports = {
                 weaponUrl: weapons[randomWeapon],
                 weaponPower: weaponPower,
                 weaponLevel: weaponLevel,
-                // slotFirst: weaponEffects[0],
-                // slotSecond: weaponEffects[1],
-                // slotThird: weaponEffects[2],
                 doubleChance: weaponEffects[0].doubleChance+weaponEffects[1].doubleChance+weaponEffects[2].doubleChance,
                 blockChance: weaponEffects[0].blockChance+weaponEffects[1].blockChance+weaponEffects[2].blockChance,
                 stealChance: weaponEffects[0].stealChance+weaponEffects[1].stealChance+weaponEffects[2].stealChance,
@@ -423,9 +453,6 @@ module.exports = {
                 armourUrl: armours[randomArmour],
                 armourDefence: armourPower,
                 armourLevel: armourLevel,
-                // slotFirst: armourEffects[0],
-                // slotSecond: armourEffects[1],
-                // slotThird: armourEffects[2],
                 doubleChance: armourEffects[0].doubleChance+armourEffects[1].doubleChance+armourEffects[2].doubleChance,
                 blockChance: armourEffects[0].blockChance+armourEffects[1].blockChance+armourEffects[2].blockChance,
                 stealChance: armourEffects[0].stealChance+armourEffects[1].stealChance+armourEffects[2].stealChance,
@@ -438,7 +465,7 @@ module.exports = {
         }
         lastGenerate= items
 
-        res.send({error:false, data: items, message: "login successful"})
+        res.send({error:false, data: [items,userNew], message: "login successful"})
     },
     takeItems:async (req,res) => {
         const singleUser = await playerDb.findOne({ _id: req.user._id }, { password: 0 });
@@ -456,7 +483,6 @@ module.exports = {
         res.send({error:false, data: user, message: "new Items"})
     },
     updateItems: async (req,res) => {
-
         const singleUser = await playerDb.findOne({ _id: req.user._id }, { password: 0 });
         if (!singleUser) res.send({error:true, data: user, message: "no user"})
 
@@ -466,7 +492,6 @@ module.exports = {
 
     updateFightItem: async (req,res) => {
         const info = req.body
-        console.log("user"+ info)
         const singleUser = await playerDb.findOne({ _id: req.user._id }, { password: 0 });
         const filteredItems = singleUser.items.filter(item => item && item.name);
 
@@ -488,7 +513,6 @@ module.exports = {
             itemToItems = userNew.weapon
             let updatedItems = userNew.items.filter((item, i) => i !== index);
             if (itemToItems) {
-                console.log("back")
                 updatedItems.push(itemToItems[0])
             }
             const user = await playerDb.findOneAndUpdate(
@@ -550,6 +574,39 @@ module.exports = {
             res.send({error:false, data: user, message: ""})
         } catch(err) {
             res.send({error:true, data:[], message: "cant delete"})
+        }
+    },
+
+    winGame: async (req, res) => {
+        try {
+            const info = req.body;
+            if (info.winPotion) {
+                const potion = await playerDb.findOneAndUpdate(
+                    { username: info.username },
+                    { $set: { potion: [] }},
+                    { new: true, projection: { password: 0 } }
+                )
+
+            }
+            if (info.losePotion) {
+                const potion2 = await playerDb.findOneAndUpdate(
+                    { username: info.lose },
+                    { $set: { potion: [] }},
+                    { new: true, projection: { password: 0 } }
+                )
+            }
+            const user = await playerDb.findOneAndUpdate(
+                { username: info.username },
+                { $inc: { money: info.gold }},
+                { new: true, projection: { password: 0 } }
+        )
+            if (!user) {
+                return res.status(404).send({ error: true,data:[], message: 'User not found' });
+            }
+            res.send({ error: false, data: user, message: "" });
+        } catch (error) {
+            console.error('Error updating user money:', error);
+            res.status(500).send({ error: true,data:[], message: 'Internal server error' });
         }
     }
 }

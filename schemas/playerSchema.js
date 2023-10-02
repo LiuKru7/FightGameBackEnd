@@ -17,7 +17,7 @@ const playerSchema = new Schema({
     money: {
         type: Number,
         required:true,
-        default: 200
+        default: 20000
     },
     weapon: {
         type:[],

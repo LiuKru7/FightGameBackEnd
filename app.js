@@ -10,12 +10,9 @@ require("dotenv").config()
 const server = createServer(app)
 
 require('./socket/sockets')(server)
-
-
 server.listen (3001,()=> {
     console.log("server running at http://localhost:3001")
 })
-
 mongoose.connect(process.env.DB_KEY)
     .then (()=> {
         console.log("connect success")

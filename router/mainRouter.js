@@ -8,7 +8,6 @@ const {
     gameInfoLoad,
     generateGame,
     takeItems, updateItems, updateFightItem, autoLogin,  removeItem, winGame
-
 } = require("../controller/mainController")
 
 const validators = require ('../middleware/validation')

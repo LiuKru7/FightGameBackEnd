@@ -8,7 +8,6 @@ const {createServer} = require('node:http')
 require("dotenv").config()
 
 const server = createServer(app)
-
 require('./socket/sockets')(server)
 server.listen (3001,()=> {
     console.log("server running at http://localhost:3001")

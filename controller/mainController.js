@@ -489,7 +489,6 @@ module.exports = {
         res.send({error:false, data: singleUser, message: "user"})
     },
 
-
     updateFightItem: async (req,res) => {
         const info = req.body
         const singleUser = await playerDb.findOne({ _id: req.user._id }, { password: 0 });

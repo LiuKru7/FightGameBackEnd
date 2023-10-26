@@ -1,22 +1,23 @@
-const { Server } = require('socket.io');
+const {Server} = require('socket.io');
 const jwt = require("jsonwebtoken");
 const playerDb = require("../schemas/playerSchema");
-const { getUserForSocket, login} = require('../controller/mainController');
 
 module.exports = (server) => {
+
     const io = new Server(server, {
         cors: {
             origin: 'http://localhost:3000',
         },
     });
     let userData2 = [];
+
     let rooms = [];
 
     io.on('connect', (socket) => {
         socket.on('token', async (val) => {
             const data = jwt.verify(val, process.env.JWT_SECRET);
             socket.userData = data;
-            let singleUser = await playerDb.findOne({ _id: data._id }, { password: 0 });
+            let singleUser = await playerDb.findOne({_id: data._id}, {password: 0});
             let singleUserNew = {
                 username: singleUser.username,
                 weapon: singleUser.weapon,
@@ -32,17 +33,18 @@ module.exports = (server) => {
                 gold: 0,
             }
             userData2.push(singleUserNew);
-            socket.userData = singleUserNew;  // <-- Important change here
+            socket.userData = singleUserNew;
             io.emit('login', userData2);
             socket.emit('login2', singleUserNew)
         });
+
         socket.on('disconnect', () => {
             userData2 = userData2.filter((user) => user.socket !== socket.id);
         });
+
         socket.on('send_fight_request', (targetUserId) => {
             const targetUser = userData2.find(user => user.socket === targetUserId);
             if (targetUser) {
-
                 io.to(targetUser.socket).emit('fight_request', {
                     from: {
                         id: socket.userData._id,
@@ -53,17 +55,15 @@ module.exports = (server) => {
             }
         });
 
-        socket.on ('accept_fight', async (opponentId) => {
+        socket.on('accept_fight', async (opponentId) => {
             const opponentSocket = io.sockets.sockets.get(opponentId);
             if (opponentSocket) {
                 const roomId = `${socket.id}_${opponentSocket.id}`;
                 socket.join(roomId);
                 opponentSocket.join(roomId);
-
-                let singleUser = await playerDb.findOne({ username: socket.userData.username }, { password: 0 });
-                let singleUser2 = await playerDb.findOne({username: opponentSocket.userData.username},{password: 0})
-
-                let firstUser= {
+                let singleUser = await playerDb.findOne({username: socket.userData.username}, {password: 0});
+                let singleUser2 = await playerDb.findOne({username: opponentSocket.userData.username}, {password: 0})
+                let firstUser = {
                     username: singleUser.username,
                     weapon: singleUser.weapon,
                     armour: singleUser.armour,
@@ -77,7 +77,8 @@ module.exports = (server) => {
                     potionUse: false,
                     gold: 0,
                 }
-                let secondUser= {
+
+                let secondUser = {
                     username: singleUser2.username,
                     weapon: singleUser2.weapon,
                     armour: singleUser2.armour,
@@ -91,14 +92,17 @@ module.exports = (server) => {
                     potionUse: false,
                     gold: 0,
                 }
+
                 rooms.push({
                     roomId: roomId,
                     player1: firstUser,
                     player2: secondUser,
                 });
+
                 io.to(socket.id).emit('fight_accepted', {
                     opponent: opponentSocket.userData
                 });
+
                 io.to(opponentSocket.id).emit('fight_accepted', {
                     opponent: socket.userData
                 });
@@ -108,24 +112,25 @@ module.exports = (server) => {
                     player1: firstUser,
                     player2: secondUser,
                 });
+
             }
         });
-        socket.on('potion',(roomId, val) => {
 
+        socket.on('potion', (roomId, val) => {
             const room = rooms.find(r => r.roomId === roomId);
             if (!room) return;
-            if (val===2) {
-                room.player2.potionUse=true
-                room.player2.hp+=room.player2.potion[0].potion
-                if (room.player2.hp>100) {
-                    room.player2.hp=100
+            if (val === 2) {
+                room.player2.potionUse = true
+                room.player2.hp += room.player2.potion[0].potion
+                if (room.player2.hp > 100) {
+                    room.player2.hp = 100
                 }
             }
-            if (val===1) {
-                room.player1.potionUse=true
-                room.player1.hp+=room.player1.potion[0].potion
-                if (room.player1.hp>100) {
-                    room.player1.hp=100
+            if (val === 1) {
+                room.player1.potionUse = true
+                room.player1.hp += room.player1.potion[0].potion
+                if (room.player1.hp > 100) {
+                    room.player1.hp = 100
                 }
             }
             io.to(roomId).emit('update_players', {
@@ -134,82 +139,69 @@ module.exports = (server) => {
                 roomId: roomId
             });
         })
+
         socket.on('hit', (roomId) => {
             const room = rooms.find(r => r.roomId === roomId);
             if (!room) return;
-
             if (room.player1.turn) {
-                let damage=room.player1.weapon[0].weaponPower
+                let damage = room.player1.weapon[0].weaponPower
                 let gold = room.player1.weapon[0].gold
-
-
                 let defenceChance = room.player2.weapon[0].blockChance + room.player2.armour[0].blockChance
-                let defenceRandom = Math.floor(Math.random()+100)
-
+                let defenceRandom = Math.floor(Math.random() + 100)
                 let doubleChange = room.player1.weapon[0].doubleChance + room.player1.armour[0].doubleChance
-                let doubleChangeRandom = Math.floor(Math.random()+100)
-
+                let doubleChangeRandom = Math.floor(Math.random() + 100)
                 let steelChance = room.player1.weapon[0].stealChance + room.player1.armour[0].stealChance
-                let stealChangeRandom = Math.floor(Math.random()*100)
-
-                if(steelChance>stealChangeRandom) {
-                    room.player1.hp+=1
-                    room.player2.hp-=1
+                let stealChangeRandom = Math.floor(Math.random() * 100)
+                if (steelChance > stealChangeRandom) {
+                    room.player1.hp += 1
+                    room.player2.hp -= 1
                 }
-                if (doubleChange>doubleChangeRandom) damage*=2
-                if (defenceChance>defenceRandom) {
-                    damage=0
-                    gold=0
+                if (doubleChange > doubleChangeRandom) damage *= 2
+                if (defenceChance > defenceRandom) {
+                    damage = 0
+                    gold = 0
                 }
-                room.player1.gold+=gold
-                room.player2.hp-= damage
-                room.player2.turn=true
-                room.player1.turn=false
+                room.player1.gold += gold
+                room.player2.hp -= damage
+                room.player2.turn = true
+                room.player1.turn = false
 
             } else {
-                let damage=room.player2.weapon[0].weaponPower
+                let damage = room.player2.weapon[0].weaponPower
                 let gold = room.player2.weapon[0].gold
-
-
                 let defenceChance = room.player1.weapon[0].blockChance + room.player1.armour[0].blockChance
-                let defenceRandom = Math.floor(Math.random()+100)
-
+                let defenceRandom = Math.floor(Math.random() + 100)
                 let doubleChange = room.player2.weapon[0].doubleChance + room.player2.armour[0].doubleChance
-                let doubleChangeRandom = Math.floor(Math.random()+100)
-
+                let doubleChangeRandom = Math.floor(Math.random() + 100)
                 let steelChance = room.player2.weapon[0].stealChance + room.player2.armour[0].stealChance
-                let stealChangeRandom = Math.floor(Math.random()*100)
-
-                if(steelChance>stealChangeRandom) {
-                    room.player2.hp+=1
-                    room.player1.hp-=1
+                let stealChangeRandom = Math.floor(Math.random() * 100)
+                if (steelChance > stealChangeRandom) {
+                    room.player2.hp += 1
+                    room.player1.hp -= 1
                 }
-                if (doubleChange>doubleChangeRandom) damage*=2
-                if (defenceChance>defenceRandom) {
-                    damage=0
-                    gold=0
+                if (doubleChange > doubleChangeRandom) damage *= 2
+                if (defenceChance > defenceRandom) {
+                    damage = 0
+                    gold = 0
                 }
-                room.player2.gold+=gold
-                room.player1.hp-= damage
-                room.player1.turn=true
-                room.player2.turn=false
+                room.player2.gold += gold
+                room.player1.hp -= damage
+                room.player1.turn = true
+                room.player2.turn = false
             }
             if (room.player1.hp < 0) room.player1.hp = 0;
             if (room.player2.hp < 0) room.player2.hp = 0;
-
             if (room.player1.potionUse) {
-                room.player1.potion[0].potion=0}
-
+                room.player1.potion[0].potion = 0
+            }
             if (room.player2.potionUse) {
-                room.player2.potion[0].potion=0}
-
-
+                room.player2.potion[0].potion = 0
+            }
             io.to(roomId).emit('update_players', {
                 player1: room.player1,
                 player2: room.player2,
                 roomId: roomId
             });
-
             if (room.player1.hp === 0) {
                 io.to(roomId).emit('wins', {
                     username: room.player2.username,
@@ -221,8 +213,6 @@ module.exports = (server) => {
                 })
                 rooms = rooms.filter(r => r.roomId !== roomId);
             }
-
-
             if (room.player2.hp === 0) {
                 io.to(roomId).emit('wins', {
                     username: room.player1.username,
@@ -233,9 +223,7 @@ module.exports = (server) => {
                     gold: room.player1.gold
                 })
                 rooms = rooms.filter(r => r.roomId !== roomId);
-
             }
-
         });
         socket.on('decline_fight', (opponentId) => {
             const opponentSocketId = userData2.find(user => user.id === opponentId)?.socket;
